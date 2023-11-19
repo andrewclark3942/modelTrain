@@ -1,13 +1,6 @@
 #include <Wire.h>
 // #include <Adafruit_PWMServoDriver.h>
 
-
-
-
-
-
-
-
 // Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 // #define SERVOMIN 150   // This is the 'minimum' pulse length count (out of 4096) - This is the start position of the servo
 // #define SERVOMAX 400   // This is the 'maximum' pulse length count (out of 4096) - This is the end position of the servo
@@ -15,12 +8,10 @@
 // #define USMAX 2400     // This is the rounded 'maximum' microsecond length based on the maximum pulse of 600
 // #define SERVO_FREQ 50  // Analog servos run at ~50 Hz updates
 
-
 //int brightness = 128;  // 50% brightness (range from 0 to 255)
 
 //Seconds to be in each state
 //int timeGreen = 10
-
 
 //Blueprint for a traffic light
 typedef struct roadLight {
@@ -29,17 +20,11 @@ typedef struct roadLight {
   int green;
 } roadLight;
 
-
-
-
 //Blueprint for a crosswalk light
 typedef struct walkLight {
   int wait;
   int walk;
 } walkLight;
-
-
-
 
 //Blueprint for an intersection
 typedef struct intersection {
@@ -52,8 +37,6 @@ typedef struct intersection {
 } intersection;
 
 
-
-
 //Create the intersections
 intersection intersection1;
 intersection intersection2;
@@ -61,22 +44,17 @@ intersection intersection3;
 intersection intersection4;
 intersection intersection5;
 
-
-
-
 //Declare intersectionsArray
 intersection *intersectionsArray[5] = { &intersection1, &intersection2, &intersection3, &intersection4, &intersection5 };
-
-
 
 /*
  Intersection state (for intersections 1-5)
  State:
  0 - Start of new intersection loop
- 1 - Yellow light on main st
+ 1 - Yellow light on main st - blink walk lights
  2 - Red light on main st
  3 - Green light on side st
- 4 - Yellow light on side st
+ 4 - Yellow light on side st - blink walk lights
  5 - Red light on side st
  */
 int intersectionState[5] = { 0, 0, 0, 0, 0 };
@@ -202,7 +180,7 @@ void setup() {
   // intersection5.walkBottomRight->wait =
   // intersection5.walkBottomRight->walk =
 
-  //Set ALL pin modes the OUTPUT
+  //Set all pin modes to OUTPUT
   pinMode(intersection1.mainRoadLight->red, OUTPUT);
   pinMode(intersection1.mainRoadLight->yellow, OUTPUT);
   pinMode(intersection1.mainRoadLight->green, OUTPUT);
@@ -287,12 +265,6 @@ void setup() {
   pinMode(intersection5.walkBottomRight->wait, OUTPUT);
 
 
-
-
-
-
-
-
   //Initialize lights (Main St to green, side streets to red, walk lights accordingly)
   for (int i = 0; i < 5; i++) {
     // Serial.println("Initializing lights");
@@ -305,16 +277,7 @@ void setup() {
   }
 
 
-
-
-  // //STUFF I DONT CARE ABOUT (Initialize servos)
-  // pwm.begin();
-  // pwm.setOscillatorFrequency(27000000);
-  // pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz update
-  // // delay(10);
-
-
-  millisBuffer = 50;               //Millisecond window for the currentMillis to land to trigger a state switch
+  millisBuffer = 50; //Millisecond window for the currentMillis to land in to trigger a state change
   intersectionSwitchDelay = 2000;  //2 second delay between intersections
   currentMillis = millis();
   for (int i = 0; i < 5; i++) {
@@ -322,9 +285,6 @@ void setup() {
   }
   // Serial.println("Setup complete");
 }
-
-
-
 
 void loop() {
   //Serial.print("Pin of intersection 1 main road light green: ");
@@ -343,26 +303,6 @@ void loop() {
 
 //Functions /////////////////////////////////////////////////////////////////
 
-// You can use this function if you'd like to set the pulse length in seconds
-// e.g. setServoPulse(0, 0.001) is a ~1 millisecond pulse width. It's not precise!
-// void setServoPulse(uint8_t n, double pulse) {
-//   double pulselength;
-//   pulselength = 1000000;      // 1,000,000 us per second
-//   pulselength /= SERVO_FREQ;  // Analog servos run at ~60 Hz updates
-//   Serial.print(pulselength);
-//   Serial.println(" us per period");
-//   pulselength /= 4096;  // 12 bits of resolution
-//   Serial.print(pulselength);
-//   Serial.println(" us per bit");
-//   pulse *= 1000000;  // convert input seconds to us
-//   pulse /= pulselength;
-//   Serial.println(pulse);
-//   pwm.setPWM(n, 0, pulse);
-// }
-
-
-
-
 /*
 Change roadLight to red
 @param light - The roadLight you want to turn red
@@ -372,9 +312,6 @@ void changeToRed(roadLight *light) {
   digitalWrite(light->yellow, LOW);
   digitalWrite(light->green, LOW);
 }
-
-
-
 
 /*
 Change roadLight to yellow
@@ -386,9 +323,6 @@ void changeToYellow(roadLight *light) {
   digitalWrite(light->green, LOW);
 }
 
-
-
-
 /*
 Change roadLight to green
 @param light - The roadLight you want to turn green
@@ -399,9 +333,6 @@ void changeToGreen(roadLight *light) {
   digitalWrite(light->green, HIGH);
 }
 
-
-
-
 /*
 Change walkLight light to walk
 @param light - The walkLight you want to turn to walk
@@ -410,9 +341,6 @@ void changeToWalk(walkLight *light) {
   digitalWrite(light->walk, HIGH);
   digitalWrite(light->wait, LOW);
 }
-
-
-
 
 /*
 Change walkLight to wait
@@ -424,57 +352,33 @@ void changeToWait(walkLight *light) {
 }
 
 
-
-
-/*
-Slide servo motor "out" (clockwise)
-@param servoNum - the servo number you want to move
-*/
-// uint8_t slideOut(int servoNum) {
-//   for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
-//     pwm.setPWM(servoNum, 0, pulselen);
-//   }
-// }
-
-
-
-
-/*
-Slide servo motor "in" (counter-clockwise)
-@param servoNum - the servo number you want to move
-*/
-// uint8_t slideIn(int servoNum) {
-//   for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
-//     pwm.setPWM(servoNum, 0, pulselen);
-//   }
-// }
-
-
 // Sequence of intersection states and how many milliseconds they corespond to
-// 0- Start: main st is green, side streets red, top left and bottom right wait, top right bottom left walk
+// 0- Start: main st is green, side streets red, top left & bottom right wait, top right & bottom left walk
 // Wait 10 seconds (10000)
 // 1- Intersection 1 main light turns yellow
-// Top right bottom left blink red
-// Wait 3 seconds (3000) 13000
+// Top right & bottom left blink red
+// Wait 5 seconds (5000) 15000ms
 // 2- Intersection 1 main light turns red
-// Top right bottom left wait
-// Wait 1 second (1000) 14000
+// Top right & bottom left wait
+// Wait 1 second (1000) 16000ms
 // 3- Intersection 1 side light turns green
-// Top left bottom right walk
-// Wait 10 seconds (10000) 24000
+// Top left & bottom right walk
+// Wait 10 seconds (10000) 26000ms
 // 4- Intersection 1 side light turns yellow
-// Top left bottom right blink red
-// Wait 3 seconds (3000) 27000
+// Top left & bottom right blink red
+// Wait 5 seconds (5000) 31000ms
 // 5- Intersection 1 side light turns red
-// Top left bottom right wait
-// Wait 1 second (1000) 28000
+// Top left & bottom right wait
+// Wait 1 second (1000) 32000ms
 // Restart
 /*
-Query an intersection for state change. If a given intersection state change condition is met, the intersection will change state
-@param inter - An intersection to check
+Query an intersection for state change. If the given intersection state change condition is met, the intersection will change state
+@param i - An intersection to check
 @param delay - The delay in milliseconds between intersections
 */
 void intersectionController(int i) {
+  //Starts at state 0
+
   // How long in milliseconds the program has been running
   currentMillis = millis();
 
@@ -482,18 +386,14 @@ void intersectionController(int i) {
   // Serial.println(currentMillis);
   // Serial.print("Previous millis: ");
   // Serial.println(previousMillis[i]);
-  //Millis of each intersection since the loop for that intersection began
+  //Millis of each intersection since the loop began for that intersection began
   int millisAfterDelay = ((currentMillis - previousMillis[i]) - (i * intersectionSwitchDelay));
   // Serial.print("Millis after delay: ");
   // Serial.println(millisAfterDelay);
   if (millisAfterDelay >= 0) {
 
-
-
     //Blink walk light
     if (intersectionState[i] == 1 && ((millisAfterDelay % 1000) <= millisBuffer)) {
-      // digitalWrite(intersectionsArray[i]->walkTopRight->wait, LOW);
-      // digitalWrite(intersectionsArray[i]->walkBottomLeft->wait, LOW);
       changeToWalk(intersectionsArray[i]->walkTopRight);
       changeToWalk(intersectionsArray[i]->walkBottomLeft);
     } else if (intersectionState[i] == 1 && (millisAfterDelay % 500 <= millisBuffer) && (millisAfterDelay % 1000 > millisBuffer)) {
@@ -503,8 +403,6 @@ void intersectionController(int i) {
 
     //Blink second walk light
     if (intersectionState[i] == 4 && ((millisAfterDelay % 1000) <= millisBuffer)) {
-      // digitalWrite(intersectionsArray[i]->walkTopLeft->wait, LOW);
-      // digitalWrite(intersectionsArray[i]->walkBottomRight->wait, LOW);
       changeToWalk(intersectionsArray[i]->walkTopLeft);
       changeToWalk(intersectionsArray[i]->walkBottomRight);
     } else if (intersectionState[i] == 4 && (millisAfterDelay % 500 <= millisBuffer) && (millisAfterDelay % 1000 > millisBuffer)) {
@@ -549,7 +447,7 @@ void intersectionController(int i) {
     }
 
     //State 4
-    else if (intersectionState[i] == 3 && ((millisAfterDelay % 28000) <= millisBuffer)) {
+    else if (intersectionState[i] == 3 && ((millisAfterDelay % 26000) <= millisBuffer)) {
       // Serial.println("State 4 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -585,3 +483,28 @@ void intersectionController(int i) {
     }
   }
 }
+
+
+// Ignore below /////////////////////
+/*
+Slide servo motor "out" (clockwise)
+@param servoNum - the servo number you want to move
+*/
+// uint8_t slideOut(int servoNum) {
+//   for (uint16_t pulselen = SERVOMIN; pulselen < SERVOMAX; pulselen++) {
+//     pwm.setPWM(servoNum, 0, pulselen);
+//   }
+// }
+
+
+
+
+/*
+Slide servo motor "in" (counter-clockwise)
+@param servoNum - the servo number you want to move
+*/
+// uint8_t slideIn(int servoNum) {
+//   for (uint16_t pulselen = SERVOMAX; pulselen > SERVOMIN; pulselen--) {
+//     pwm.setPWM(servoNum, 0, pulselen);
+//   }
+// }

@@ -1,2 +1,2 @@
 # modelTrain
-Arduino C project to run the traffic lights for a model train town
+Arduino C project to run traffic lights for a model train town
