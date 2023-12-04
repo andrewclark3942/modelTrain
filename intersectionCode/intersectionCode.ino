@@ -59,7 +59,22 @@ intersection *intersectionsArray[5] = { &intersection1, &intersection2, &interse
  */
 int intersectionState[5] = { 0, 0, 0, 0, 0 };
 
+/*
+  Change these values to change duration of each intersection state.
+  Values are in seconds.
+  See doc on the intersectionController function for more information on intersection states.
+ */
+int stateDuration[6] = {
+  10, // State 0
+  5,  // State 1
+  1,  // State 2
+  10, // State 3
+  5,  // State 4
+  1   // State 5
+};
 
+//Set in the setup function, don't change here
+int stateDurationMillis[6] = {0,0,0,0,0,0};
 
 
 //Millis of the start of the current loop (intersections 1-5)
@@ -69,7 +84,8 @@ unsigned long currentMillis;
 
 
 //A buffer/range in milliseconds for checking if an intersection should enter another state
-//Needed because not every millisecond will be evaluated for state change, some are skipped.
+//Needed because not every millisecond will be evaluated for state change, some are skipped and therefore
+//a range of values should be evaluated.
 int millisBuffer;
 
 
@@ -89,7 +105,7 @@ void setup() {
   }
 
   //Tell arduino to talk to serial monitor
-  // Serial.begin(9600);
+  ///Serial.begin(9600);
 
   //Map all pins to their intersection lights. These numbers will likely have to be changed
   //for a replicate setup
@@ -173,12 +189,12 @@ void setup() {
   intersection5.sideRoadLight->green = 51;
   intersection5.walkTopRight->wait = 57;
   intersection5.walkTopRight->walk = 56;
-  // intersection5.walkTopLeft->wait =
-  // intersection5.walkTopLeft->walk =
+  // intersection5.walkTopLeft->wait = //not connected?
+  // intersection5.walkTopLeft->walk = //not connected?
   intersection5.walkBottomLeft->wait = 55;
   intersection5.walkBottomLeft->walk = 54;
-  // intersection5.walkBottomRight->wait =
-  // intersection5.walkBottomRight->walk =
+  // intersection5.walkBottomRight->wait = //not connected?
+  // intersection5.walkBottomRight->walk = //not connected?
 
   //Set all pin modes to OUTPUT
   pinMode(intersection1.mainRoadLight->red, OUTPUT);
@@ -283,6 +299,17 @@ void setup() {
   for (int i = 0; i < 5; i++) {
     previousMillis[i] = currentMillis;
   }
+
+  //Set stateDurationMillis for use in the intersectionController
+  for (int i = 0; i < 6; i++) {
+    stateDurationMillis[i] = stateDuration[i] * 1000;
+    int j = i;
+    while (j > 0) { //Add all previous millis to this to get the current total
+      stateDurationMillis[i] += stateDurationMillis[j-1];
+      j--
+    }
+  }
+
   // Serial.println("Setup complete");
 }
 
@@ -387,7 +414,9 @@ void intersectionController(int i) {
   // Serial.print("Previous millis: ");
   // Serial.println(previousMillis[i]);
   //Millis of each intersection since the loop began for that intersection began
-  int millisAfterDelay = ((currentMillis - previousMillis[i]) - (i * intersectionSwitchDelay));
+  //Intersection 0 has 0 second delay, intersection 1 has 2 second delay, intersection 2 has 4 second delay, etc.
+  //int millisAfterDelay = ((currentMillis - previousMillis[0]) - (i * intersectionSwitchDelay));
+  int millisAfterDelay = ((currentMillis - previousMillis[0]) - (previousMillis[i] == 0 ? i * intersectionSwitchDelay : 0));
   // Serial.print("Millis after delay: ");
   // Serial.println(millisAfterDelay);
   if (millisAfterDelay >= 0) {
@@ -411,7 +440,7 @@ void intersectionController(int i) {
     }
 
     //State 1
-    if (intersectionState[i] == 0 && millisAfterDelay > millisBuffer && ((millisAfterDelay % 10000) <= millisBuffer)) {
+    if (intersectionState[i] == 0 && millisAfterDelay > millisBuffer && ((millisAfterDelay % stateDurationMillis[0]) <= millisBuffer)) {
       // Serial.println("State 1 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -421,7 +450,7 @@ void intersectionController(int i) {
     }
 
     //State 2
-    else if (intersectionState[i] == 1 && ((millisAfterDelay % 15000) <= millisBuffer)) {
+    else if (intersectionState[i] == 1 && ((millisAfterDelay % stateDurationMillis[1]) <= millisBuffer)) {
       // Serial.println("State 2 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -434,7 +463,7 @@ void intersectionController(int i) {
     }
 
     //State 3
-    else if (intersectionState[i] == 2 && ((millisAfterDelay % 16000) <= millisBuffer)) {
+    else if (intersectionState[i] == 2 && ((millisAfterDelay % stateDurationMillis[2]) <= millisBuffer)) {
       // Serial.println("State 3 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -447,7 +476,7 @@ void intersectionController(int i) {
     }
 
     //State 4
-    else if (intersectionState[i] == 3 && ((millisAfterDelay % 26000) <= millisBuffer)) {
+    else if (intersectionState[i] == 3 && ((millisAfterDelay % stateDurationMillis[3]) <= millisBuffer)) {
       // Serial.println("State 4 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -457,7 +486,7 @@ void intersectionController(int i) {
     }
 
     //State 5
-    else if (intersectionState[i] == 4 && ((millisAfterDelay % 31000) <= millisBuffer)) {
+    else if (intersectionState[i] == 4 && ((millisAfterDelay % stateDurationMillis[4]) <= millisBuffer)) {
       // Serial.println("State 5 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -469,7 +498,7 @@ void intersectionController(int i) {
     }
 
     //State 0
-    else if (intersectionState[i] == 5 && (millisAfterDelay % 32000) <= millisBuffer) {
+    else if (intersectionState[i] == 5 && (millisAfterDelay % stateDurationMillis[5]) <= millisBuffer) {
       // Serial.println("State 0 ============================");
       // Serial.print("Current millis: ");
       // Serial.println(currentMillis, DEC);
@@ -485,7 +514,7 @@ void intersectionController(int i) {
 }
 
 
-// Ignore below /////////////////////
+// Ignore below /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 Slide servo motor "out" (clockwise)
 @param servoNum - the servo number you want to move
