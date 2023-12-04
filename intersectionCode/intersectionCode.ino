@@ -306,7 +306,7 @@ void setup() {
     int j = i;
     while (j > 0) { //Add all previous millis to this to get the current total
       stateDurationMillis[i] += stateDurationMillis[j-1];
-      j--
+      j--;
     }
   }
 
