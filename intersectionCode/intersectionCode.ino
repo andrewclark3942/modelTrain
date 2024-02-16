@@ -65,16 +65,16 @@ int intersectionState[5] = { 0, 0, 0, 0, 0 };
   See doc on the intersectionController function for more information on intersection states.
  */
 int stateDuration[6] = {
-  10, // State 0
-  5,  // State 1
-  1,  // State 2
-  10, // State 3
-  5,  // State 4
-  1   // State 5
+  12,  // State 0
+  4,   // State 1
+  2,   // State 2
+  12,  // State 3
+  4,   // State 4
+  2    // State 5
 };
 
 //Set in the setup function, don't change here
-int stateDurationMillis[6] = {0,0,0,0,0,0};
+long stateDurationMillis[6] = { 0, 0, 0, 0, 0, 0 };
 
 
 //Millis of the start of the current loop (intersections 1-5)
@@ -105,7 +105,7 @@ void setup() {
   }
 
   //Tell arduino to talk to serial monitor
-  ///Serial.begin(9600);
+  // Serial.begin(9600);
 
   //Map all pins to their intersection lights. These numbers will likely have to be changed
   //for a replicate setup
@@ -293,8 +293,8 @@ void setup() {
   }
 
 
-  millisBuffer = 50; //Millisecond window for the currentMillis to land in to trigger a state change
-  intersectionSwitchDelay = 2000;  //2 second delay between intersections
+  millisBuffer = 120;               //Millisecond window for the currentMillis to land in to trigger a state change
+  intersectionSwitchDelay = 3000;  //2 second delay between intersections
   currentMillis = millis();
   for (int i = 0; i < 5; i++) {
     previousMillis[i] = currentMillis;
@@ -303,12 +303,18 @@ void setup() {
   //Set stateDurationMillis for use in the intersectionController
   for (int i = 0; i < 6; i++) {
     stateDurationMillis[i] = stateDuration[i] * 1000;
-    int j = i;
-    while (j > 0) { //Add all previous millis to this to get the current total
-      stateDurationMillis[i] += stateDurationMillis[j-1];
-      j--;
+    if (i > 0) {
+      stateDurationMillis[i] += stateDurationMillis[i-1];
     }
   }
+
+  // Serial.println("Times");
+  // Serial.println(stateDurationMillis[0]);
+  // Serial.println(stateDurationMillis[1]);
+  // Serial.println(stateDurationMillis[2]);
+  // Serial.println(stateDurationMillis[3]);
+  // Serial.println(stateDurationMillis[4]);
+  // Serial.println(stateDurationMillis[5]);
 
   // Serial.println("Setup complete");
 }
@@ -416,7 +422,7 @@ void intersectionController(int i) {
   //Millis of each intersection since the loop began for that intersection began
   //Intersection 0 has 0 second delay, intersection 1 has 2 second delay, intersection 2 has 4 second delay, etc.
   //int millisAfterDelay = ((currentMillis - previousMillis[0]) - (i * intersectionSwitchDelay));
-  int millisAfterDelay = ((currentMillis - previousMillis[0]) - (previousMillis[i] == 0 ? i * intersectionSwitchDelay : 0));
+  int millisAfterDelay = ((currentMillis - previousMillis[i]) - (previousMillis[i] == 0 ? i * intersectionSwitchDelay : 0));
   // Serial.print("Millis after delay: ");
   // Serial.println(millisAfterDelay);
   if (millisAfterDelay >= 0) {
@@ -504,7 +510,8 @@ void intersectionController(int i) {
       // Serial.println(currentMillis, DEC);
       intersectionState[i] = 0;
       //Only set previousMillis when the state restarts to 0
-      previousMillis[i] = currentMillis;
+      // previousMillis[i] = currentMillis;
+      previousMillis[i] = millis();
       changeToGreen(intersectionsArray[i]->mainRoadLight);
       changeToWalk(intersectionsArray[i]->walkTopRight);
       changeToWalk(intersectionsArray[i]->walkBottomLeft);
