@@ -193,8 +193,8 @@ void setup() {
   // intersection5.walkTopLeft->walk = //not connected?
   intersection5.walkBottomLeft->wait = 55;
   intersection5.walkBottomLeft->walk = 54;
-  // intersection5.walkBottomRight->wait = //not connected?
-  // intersection5.walkBottomRight->walk = //not connected?
+  intersection5.walkBottomRight->wait = 53;//not connected?
+  // intersection5.walkBottomRight->walk = //not connected
 
   //Set all pin modes to OUTPUT
   pinMode(intersection1.mainRoadLight->red, OUTPUT);
@@ -293,8 +293,8 @@ void setup() {
   }
 
 
-  millisBuffer = 120;               //Millisecond window for the currentMillis to land in to trigger a state change
-  intersectionSwitchDelay = 3000;  //2 second delay between intersections
+  millisBuffer = 120;              //Millisecond window for the currentMillis to land in to trigger a state change
+  intersectionSwitchDelay = 3000;  //3 second delay between intersections
   currentMillis = millis();
   for (int i = 0; i < 5; i++) {
     previousMillis[i] = currentMillis;
@@ -304,7 +304,7 @@ void setup() {
   for (int i = 0; i < 6; i++) {
     stateDurationMillis[i] = stateDuration[i] * 1000;
     if (i > 0) {
-      stateDurationMillis[i] += stateDurationMillis[i-1];
+      stateDurationMillis[i] += stateDurationMillis[i - 1];
     }
   }
 
@@ -414,7 +414,13 @@ void intersectionController(int i) {
 
   // How long in milliseconds the program has been running
   currentMillis = millis();
-
+  int delay;
+  if (previousMillis[i] == 0) {
+    delay = (i * intersectionSwitchDelay);
+  }
+  else {
+    delay = 0;
+  }
   // Serial.print("Current millis: ");
   // Serial.println(currentMillis);
   // Serial.print("Previous millis: ");
@@ -422,7 +428,7 @@ void intersectionController(int i) {
   //Millis of each intersection since the loop began for that intersection began
   //Intersection 0 has 0 second delay, intersection 1 has 2 second delay, intersection 2 has 4 second delay, etc.
   //int millisAfterDelay = ((currentMillis - previousMillis[0]) - (i * intersectionSwitchDelay));
-  int millisAfterDelay = ((currentMillis - previousMillis[i]) - (previousMillis[i] == 0 ? i * intersectionSwitchDelay : 0));
+  long millisAfterDelay = ((currentMillis - previousMillis[i]) - delay);
   // Serial.print("Millis after delay: ");
   // Serial.println(millisAfterDelay);
   if (millisAfterDelay >= 0) {
@@ -446,76 +452,48 @@ void intersectionController(int i) {
     }
 
     //State 1
-    if (intersectionState[i] == 0 && millisAfterDelay > millisBuffer && ((millisAfterDelay % stateDurationMillis[0]) <= millisBuffer)) {
-      // Serial.println("State 1 ============================");
-      // Serial.print("Current millis: ");
-      // Serial.println(currentMillis, DEC);
+    if (intersectionState[i] == 0 && millisAfterDelay > stateDurationMillis[0]) {
       intersectionState[i] = 1;
       changeToYellow(intersectionsArray[i]->mainRoadLight);
-      return;
     }
 
     //State 2
-    else if (intersectionState[i] == 1 && ((millisAfterDelay % stateDurationMillis[1]) <= millisBuffer)) {
-      // Serial.println("State 2 ============================");
-      // Serial.print("Current millis: ");
-      // Serial.println(currentMillis, DEC);
+    else if (intersectionState[i] == 1 && millisAfterDelay > stateDurationMillis[1]) {
       intersectionState[i] = 2;
       changeToRed(intersectionsArray[i]->mainRoadLight);
       changeToWait(intersectionsArray[i]->walkTopRight);
       changeToWait(intersectionsArray[i]->walkBottomLeft);
-      return;
-
     }
 
     //State 3
-    else if (intersectionState[i] == 2 && ((millisAfterDelay % stateDurationMillis[2]) <= millisBuffer)) {
-      // Serial.println("State 3 ============================");
-      // Serial.print("Current millis: ");
-      // Serial.println(currentMillis, DEC);
+    else if (intersectionState[i] == 2 && millisAfterDelay > stateDurationMillis[2]) {
       intersectionState[i] = 3;
       changeToGreen(intersectionsArray[i]->sideRoadLight);
       changeToWalk(intersectionsArray[i]->walkTopLeft);
       changeToWalk(intersectionsArray[i]->walkBottomRight);
-      return;
-
     }
 
     //State 4
-    else if (intersectionState[i] == 3 && ((millisAfterDelay % stateDurationMillis[3]) <= millisBuffer)) {
-      // Serial.println("State 4 ============================");
-      // Serial.print("Current millis: ");
-      // Serial.println(currentMillis, DEC);
+    else if (intersectionState[i] == 3 && millisAfterDelay > stateDurationMillis[3]) {
       intersectionState[i] = 4;
       changeToYellow(intersectionsArray[i]->sideRoadLight);
-      return;
     }
 
     //State 5
-    else if (intersectionState[i] == 4 && ((millisAfterDelay % stateDurationMillis[4]) <= millisBuffer)) {
-      // Serial.println("State 5 ============================");
-      // Serial.print("Current millis: ");
-      // Serial.println(currentMillis, DEC);
+    else if (intersectionState[i] == 4 && millisAfterDelay > stateDurationMillis[4]) {
       intersectionState[i] = 5;
       changeToRed(intersectionsArray[i]->sideRoadLight);
       changeToWait(intersectionsArray[i]->walkTopLeft);
       changeToWait(intersectionsArray[i]->walkBottomRight);
-      return;
     }
 
     //State 0
-    else if (intersectionState[i] == 5 && (millisAfterDelay % stateDurationMillis[5]) <= millisBuffer) {
-      // Serial.println("State 0 ============================");
-      // Serial.print("Current millis: ");
-      // Serial.println(currentMillis, DEC);
+    else if (intersectionState[i] == 5 && millisAfterDelay > stateDurationMillis[5]) {
       intersectionState[i] = 0;
-      //Only set previousMillis when the state restarts to 0
-      // previousMillis[i] = currentMillis;
-      previousMillis[i] = millis();
+      previousMillis[i] = currentMillis;
       changeToGreen(intersectionsArray[i]->mainRoadLight);
       changeToWalk(intersectionsArray[i]->walkTopRight);
       changeToWalk(intersectionsArray[i]->walkBottomLeft);
-      return;
     }
   }
 }
