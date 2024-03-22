@@ -106,7 +106,6 @@ void setup() {
 
   //Tell arduino to talk to serial monitor
   // Serial.begin(9600);
-
   //Map all pins to their intersection lights. These numbers will likely have to be changed
   //for a replicate setup
 
